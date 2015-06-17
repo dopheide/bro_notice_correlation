@@ -35,8 +35,6 @@ redef Notice::alarmed_types += {
 
 export {
 	global watch_hosts: table[addr] of table[Notice::Type] of count &write_expire = 120 min &synchronized;
-	global suppress_hosts: set[addr] &write_expire = 120min &synchronized;
-
 	global watch_host: function(whost: addr, n: Notice::Info);
 }
 
