@@ -10,20 +10,37 @@ export {
     Multi::Multi_Notice,
     Multi::Multi_Notice_AutoBlock,
     Multi::Multi_Notice_AutoBlockAlarm,
+    Multi::Single_Notice_Threshold,
+    Multi::Single_Notice_Threshold_Block
   };
 
   global multi_notice_types: set[Notice::Type] = {
-  		Test::HTTP_Header_Alert_with_id,
-  		Test::HTTP_Header_Alert_with_src,
+                Test::HTTP_Header_Alert_with_id,
+                Test::HTTP_Header_Alert_with_src,
   		SSH::Password_Guessing,
   		Bash::HTTP_Header_Attack,
   	} &redef;
 
-  global multi_non_block_thres: count = 3;
+  global multi_non_block_thres: count = 3 &redef;
 
   global multi_notice_non_block_types: set[Notice::Type] = {
-  		Test::HTTP_Header_Alert_with_src
+  	 	Test::HTTP_Header_Alert_with_src
   	} &redef;
+
+  global watch_hosts: table[addr] of table[Notice::Type] of count &write_expire = 120 min &synchronized;
+  global watch_host: function(whost: addr, n: Notice::Info);
+
+  # single notice threshold
+  type SNT: record {
+       thres: count;
+       block: bool;
+       blockthres: count;
+  };
+  
+# test w/ Intel even though we'll most likely use SenstiveURI, etc.  
+  global single_notice_threshold: table[Notice::Type] of SNT = {
+
+  } &redef;
 
 }
 
@@ -32,12 +49,6 @@ redef Notice::alarmed_types += {
 		Multi::Multi_Notice_AutoBlock,
 		Multi::Multi_Notice_AutoBlockAlarm
 };
-
-export {
-	global watch_hosts: table[addr] of table[Notice::Type] of count &write_expire = 120 min &synchronized;
-	global watch_host: function(whost: addr, n: Notice::Info);
-}
-
 
 function watch_host(whost: addr, n: Notice::Info){
 	local wn: Notice::Info;
@@ -54,6 +65,24 @@ function watch_host(whost: addr, n: Notice::Info){
 		watch_hosts[whost][n$note] = 1;
 	}else{
 		++watch_hosts[whost][n$note];
+
+		# loop through SNT data here
+		if(n$note in single_notice_threshold){
+		   if(watch_hosts[whost][n$note] == single_notice_threshold[n$note]$thres){
+                    NOTICE([$note=Multi::Single_Notice_Threshold,
+                       $msg=fmt("Crossed threshold of %d for %s",
+		       			 single_notice_threshold[n$note]$thres,n$note),
+                       $src=whost,
+                       $identifier=cat(whost)]);
+		   }else if(single_notice_threshold[n$note]$block == T && watch_hosts[whost][n$note] == single_notice_threshold[n$note]$blockthres){
+		    NOTICE([$note=Multi::Single_Notice_Threshold_Block,
+                       $msg=fmt("Crossed block threshold of %d for %s",
+		       			 single_notice_threshold[n$note]$blockthres,n$note),
+                       $src=whost,
+                       $identifier=cat(whost)]);
+		   }
+		}
+
 	}
 
 	num_notices = |watch_hosts[whost]|;
@@ -104,11 +133,9 @@ hook Notice::policy(n: Notice::Info)
 	}
 }
 
-
 event Intel::log_intel(rec: Intel::Info){
 
      # any Intel hit, add to watch list.
      local wn = Notice::Info($note=Intel::Notice);
      watch_host(rec$id$orig_h,wn);
-
 }
