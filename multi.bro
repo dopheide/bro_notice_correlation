@@ -2,6 +2,7 @@
 
 @load base/frameworks/intel
 @load base/frameworks/notice
+@load policy/frameworks/intel/do_notice.bro
 
 module Multi;
 
