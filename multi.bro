@@ -22,7 +22,7 @@ export {
   global multi_non_block_thres: count = 3 &redef;
 
   global multi_notice_non_block_types: set[Notice::Type] = {
-  	 	Test::HTTP_Header_Alert_with_src
+#  	 	Test::HTTP_Header_Alert_with_src
   	} &redef;
 
   global watch_hosts: table[addr] of table[Notice::Type] of count &write_expire = 120 min &synchronized;
