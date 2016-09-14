@@ -15,10 +15,8 @@ export {
   };
 
   global multi_notice_types: set[Notice::Type] = {
-                Test::HTTP_Header_Alert_with_id,
-                Test::HTTP_Header_Alert_with_src,
-  		SSH::Password_Guessing,
-  		Bash::HTTP_Header_Attack,
+#  		SSH::Password_Guessing,
+#  		Bash::HTTP_Header_Attack
   	} &redef;
 
   global multi_non_block_thres: count = 3 &redef;
