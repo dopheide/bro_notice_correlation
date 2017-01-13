@@ -1,2 +1,4 @@
 [package]
 version = 1.0.0
+tags = notices, notice, correlation
+description = Adds support for multi-notice correlation. For more information, see http://blog.samoehlert.com/correlating-bro-notices or the talk from BroCon 2016.
