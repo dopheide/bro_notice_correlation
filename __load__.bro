@@ -1,2 +1,2 @@
-@load multi
+@load ./multi
 
